@@ -7,6 +7,7 @@ from hydra import initialize, compose
 from hydra.core.global_hydra import GlobalHydra
 from get_embeddings import get_dino_embedding
 from scipy.spatial.distance import cosine
+import datetime
 
 import os
 normal_embeddings = []
@@ -57,16 +58,36 @@ low_res_masks, prd_scores, _, _ = predictor.model.sam_mask_decoder(
 prd_masks = predictor._transforms.postprocess_masks(low_res_masks, predictor._orig_hw[-1])
 mask = (torch.sigmoid(prd_masks[0, 0]).detach().cpu().numpy() > 0.5).astype(np.uint8)
 
-# Overlay mask
-overlay = image_bgr.copy()
-overlay[mask == 1] = (0, 255, 0)  # Green
-result = cv2.addWeighted(image_bgr, 0.7, overlay, 0.3, 0)
+# Apply mask to image (black background)
+segmented_object = cv2.bitwise_and(image_rgb, image_rgb, mask=mask)
 
-# Show and/or save result
-cv2.imshow("Segmented Image", result)
-cv2.waitKey(0)
+# Save segmented image
+timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+seg_img_path = f"normal_data/images/segmented_{timestamp}.jpg"
+cv2.imwrite(seg_img_path, cv2.cvtColor(segmented_object, cv2.COLOR_RGB2BGR))
+
+# Get DINOv2 embedding
+embedding = get_dino_embedding(segmented_object)  # Must return numpy array
+
+# Save embedding
+embedding_path = f"normal_data/normal_embeddings.npy"
+# np.save(embedding_path, embedding)
+np.save(embedding_path, np.array(normal_embeddings))
+
+
+print(f"Saved segmented image to {seg_img_path}")
+print(f"Saved embedding to {embedding_path}")
+
+# Overlay mask
+# overlay = image_bgr.copy()
+# overlay[mask == 1] = (0, 255, 0)  # Green
+# result = cv2.addWeighted(image_bgr, 0.7, overlay, 0.3, 0)
+
+# # Show and/or save result
+# cv2.imshow("Segmented Image", result)
+# cv2.waitKey(0)
 
 
 cv2.destroyAllWindows()
 # Optional: Save the result
-cv2.imwrite(r"C:\Users\naysh\ML Robocon\image_segmentation\dinov2\img_output\segmented_image.jpg", result)
+# cv2.imwrite(r"C:\Users\naysh\ML Robocon\image_segmentation\dinov2\img_output\segmented_image.jpg", result)
