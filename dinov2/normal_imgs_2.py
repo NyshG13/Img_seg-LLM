@@ -21,7 +21,7 @@ sam2_model = build_sam2(model_cfg, sam2_checkpoint, device=device)
 mask_generator = SAM2AutomaticMaskGenerator(model=sam2_model)
 
 # === Load Image ===
-image_path = r"C:\Users\naysh\ML Robocon\image_segmentation\dinov2\test_images\mars and bottle.jpg"
+image_path = r"C:\Users\naysh\ML Robocon\image_segmentation\dinov2\test_images\farm1_test.jpg"
 image_bgr = cv2.imread(image_path)
 image_rgb = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
 

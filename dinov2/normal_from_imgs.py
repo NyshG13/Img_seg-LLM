@@ -25,7 +25,7 @@ sam2_model = build_sam2(model_cfg, sam2_checkpoint, device=device)
 predictor = SAM2ImagePredictor(sam2_model)
 
 # Load image
-image_path = r"C:\Users\naysh\ML Robocon\image_segmentation\dinov2\test_images\marsyard +ppl img.jpg"
+image_path = r"C:\Users\naysh\ML Robocon\image_segmentation\dinov2\test_images\farm1_test.jpg"
 image_bgr = cv2.imread(image_path)
 image_rgb = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
 
