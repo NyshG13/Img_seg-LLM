@@ -9,6 +9,11 @@ from get_embeddings import get_dino_embedding
 from scipy.spatial.distance import cosine
 from anamoly_checker import is_anomalous
 from sam2.automatic_mask_generator import SAM2AutomaticMaskGenerator
+import cv2
+import torch
+from PIL import Image
+from transformers import AutoProcessor, AutoModelForZeroShotObjectDetection
+import datetime 
 
 import os
 # normal_embeddings = []
@@ -115,21 +120,57 @@ while True:
             if cropped_object.shape[0] < 10 or cropped_object.shape[1] < 10:
                 continue
 
-            # Get DINOv2 embedding
-            emb = get_dino_embedding(cropped_object).squeeze()
-            if emb.ndim != 1:
-                emb = emb.reshape(-1)
+            #apply grounding dino
+            model_id = "IDEA-Research/grounding-dino-base"
+            device = "cuda" if torch.cuda.is_available() else "cpu"
 
-            # Check if it's anomalous
-            if is_anomalous(emb, normal_embeddings):
-                os.makedirs("weird_objects", exist_ok=True)
-                idx = len(os.listdir("weird_objects")) // 2
-                path = f"weird_objects/weird_{idx+1}.jpg"
-                CompVision.imwrite(path, cropped_object)
-                np.save(f"weird_objects/weird_{idx+1}.npy", emb)
-                print(f"Weird object saved: {path}")
-            else:
-                print("Object is normal")
+            processor = AutoProcessor.from_pretrained(model_id, use_auth_token=True)
+            model = AutoModelForZeroShotObjectDetection.from_pretrained(model_id, use_auth_token=True).to(device)
+
+            prompt = "an odd item. Something that doesn't belong."
+
+            pil_crop = Image.fromarray(CompVision.cvtColor(cropped_object, CompVision.COLOR_BGR2RGB))
+
+            # Grounding DINO input
+            inputs = processor(images=pil_crop, text=prompt, return_tensors="pt").to(device)
+
+            with torch.no_grad():
+                outputs = model(**inputs)
+
+            # Post-process
+            results = processor.post_process_grounded_object_detection(
+                outputs,
+                inputs.input_ids,
+                box_threshold=0.4,        # tuneable
+                text_threshold=0.3,       # tuneable
+                target_sizes=[pil_crop.size[::-1]]  # (height, width)
+            )
+
+            if len(results[0]["boxes"]) > 0:
+            # Construct filename with timestamp
+                timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+                filename = f"weird_objects/weird_{timestamp}.jpg"
+
+                # Save the cropped object (OpenCV format)
+                CompVision.imwrite(filename, cropped_object)
+
+                print(f"[INFO] Unusual object saved: {filename}")
+
+            # # Get DINOv2 embedding
+            # emb = get_dino_embedding(cropped_object).squeeze()
+            # if emb.ndim != 1:
+            #     emb = emb.reshape(-1)
+
+            # # Check if it's anomalous
+            # if is_anomalous(emb, normal_embeddings):
+            #     os.makedirs("weird_objects", exist_ok=True)
+            #     idx = len(os.listdir("weird_objects")) // 2
+            #     path = f"weird_objects/weird_{idx+1}.jpg"
+            #     CompVision.imwrite(path, cropped_object)
+            #     np.save(f"weird_objects/weird_{idx+1}.npy", emb)
+            #     print(f"Weird object saved: {path}")
+            # else:
+            #     print("Object is normal")
 
         # Blend original frame with overlay
         result = CompVision.addWeighted(frame, 0.7, overlay, 0.3, 0)
@@ -159,7 +200,6 @@ while True:
     # if emb.ndim != 1:
     #     emb = emb.reshape(-1)
 
-    # Automatically check for anomaly every frame!
     # if is_anomalous(emb, normal_embeddings):
     #     # print("Weird object detected!")
 
