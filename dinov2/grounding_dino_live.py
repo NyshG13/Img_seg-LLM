@@ -11,6 +11,7 @@ from transformers import AutoProcessor, AutoModelForZeroShotObjectDetection
 import datetime 
 
 import os
+start_time = datetime.datetime.now()
 
 os.makedirs("weird_objects", exist_ok=True)
 
@@ -134,3 +135,6 @@ while True:
 
 cap.release()
 CompVision.destroyAllWindows()
+
+endtime = datetime.datetime.now()
+print(endtime-start_time)

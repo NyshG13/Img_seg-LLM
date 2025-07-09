@@ -75,8 +75,11 @@ for json_file in sorted(os.listdir(json_folder)):
         with open(os.path.join(json_folder, json_file)) as f:
             data = json.load(f)
 
-        img_filename = data["image"]
-        description = data["description"]
+        # img_filename = data["image"]
+        # description = data["description"]
+
+        img_filename = data.get("image", "unknown.jpg")
+        description = data.get("description", "No description available.")
 
         pdf.add_page()
         pdf.set_font("Arial", "B", 14)
@@ -85,10 +88,12 @@ for json_file in sorted(os.listdir(json_folder)):
         # Add image
         img_path = os.path.join(img_folder, img_filename)
         img = Image.open(img_path)
-        img.save("temp_image.jpg")  # convert in case of incompatible format
-        pdf.image("temp_image.jpg", x=30, y=30, w=150)
+        temp_path = f"temp_{img_filename}.jpg"
+        img.save(temp_path)
+        pdf.image(temp_path, x=30, y=pdf.get_y(), w=150)
         pdf.ln(100)
-
+        os.remove(temp_path)
+        
         # Add description
         pdf.set_font("Arial", "", 12)
         pdf.multi_cell(0, 10, f"LLM Description:\n{description}")
