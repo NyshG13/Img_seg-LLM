@@ -9,7 +9,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 processor = AutoProcessor.from_pretrained(model_id)
 model = AutoModelForZeroShotObjectDetection.from_pretrained(model_id).to(device)
 
-text = "an unusual item."
+text = "an odd item. Something that doesn't belong."
 
 cap = cv2.VideoCapture(0)  # Use 0 for webcam
 
@@ -28,8 +28,8 @@ while True:
     results = processor.post_process_grounded_object_detection(
         outputs,
         inputs.input_ids,
-        box_threshold=0.4,
-        text_threshold=0.3,
+        box_threshold=0.3,
+        text_threshold=0.2,
         target_sizes=[image.size[::-1]]
     )
 

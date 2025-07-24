@@ -52,40 +52,6 @@ while True:
     if not ret:
         break
     
-    # frame_rgb = CompVision.cvtColor(frame, CompVision.COLOR_BGR2RGB)
-    # predictor.set_image(frame_rgb)
-    
-    # # Generate dummy points (modify this part for actual interactive points)
-    # h, w, _ = frame.shape
-    # input_points = np.array([[[w//2, h//2]]])
-    # input_labels = np.ones([1, 1])
-    
-    # mask_input, unnorm_coords, labels, unnorm_box = predictor._prep_prompts(
-    #     input_points, input_labels, box=None, mask_logits=None, normalize_coords=True
-    # )
-    # sparse_embeddings, dense_embeddings = predictor.model.sam_prompt_encoder(
-    #     points=(unnorm_coords, labels), boxes=None, masks=None
-    # )
-    
-    # # Generate mask
-    # low_res_masks, prd_scores, _, _ = predictor.model.sam_mask_decoder(
-    #     image_embeddings=predictor._features["image_embed"][-1].unsqueeze(0),
-    #     image_pe=predictor.model.sam_prompt_encoder.get_dense_pe(),
-    #     sparse_prompt_embeddings=sparse_embeddings,
-    #     dense_prompt_embeddings=dense_embeddings,
-    #     multimask_output=True,
-    #     repeat_image=False,
-    #     high_res_features=[feat_level[-1].unsqueeze(0) for feat_level in predictor._features["high_res_feats"]]
-    # )
-    # prd_masks = predictor._transforms.postprocess_masks(low_res_masks, predictor._orig_hw[-1])
-    # mask = (torch.sigmoid(prd_masks[0, 0]).detach().cpu().numpy() > 0.5).astype(np.uint8)
-
-    
-    # # Overlay mask
-    # overlay = frame.copy()
-    # overlay[mask == 1] = (0, 255, 0)  # Green mask
-    # result = CompVision.addWeighted(frame, 0.7, overlay, 0.3, 0)
-
     frame_rgb = CompVision.cvtColor(frame, CompVision.COLOR_BGR2RGB)
 
     try:
@@ -98,9 +64,9 @@ while True:
         for mask_idx, mask_dict in enumerate(masks):
             mask = mask_dict["segmentation"].astype(np.uint8)
 
-            # # Optional area filter
-            # if np.sum(mask) < 5000:
-            #     continue
+            # Optional area filter
+            if np.sum(mask) < 5000:
+                continue
 
             # Add green overlay
             overlay[mask == 1] = (0, 255, 0)
