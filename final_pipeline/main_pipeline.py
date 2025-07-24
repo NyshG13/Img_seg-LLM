@@ -12,6 +12,12 @@ import time
 from grounded_sam2_tracking_camera_with_continuous_id import IncrementalObjectTracker
 from qwen_analyzer import QwenVLAnalyzer
 from report_generator import ReportGenerator
+from gps_tracking import pixel_to_gps
+from gps_tracking import handle_detection
+
+import rospy
+from erc_rover.srv import GetGPS, GetYaw, GetDepth
+
 
 def main(args):
     # --- 1. Setup Environment ---
@@ -56,6 +62,15 @@ def main(args):
     frame_interval = 1.0 / args.fps if args.fps else 0
     last_processed_time = 0
     latest_annotated_frame = None # To hold the last processed frame for smooth display
+    
+    rospy.wait_for_service("get_gps")
+    rospy.wait_for_service("get_yaw")
+    rospy.wait_for_service("get_depth")
+
+    get_gps = rospy.ServiceProxy("get_gps", GetGPS)
+    get_yaw = rospy.ServiceProxy("get_yaw", GetYaw)
+    get_depth = rospy.ServiceProxy("get_depth", GetDepth)
+
 
     try:
         while True:
@@ -105,6 +120,9 @@ def main(args):
                     print(f"[New Object] Discovered object with ID: {obj_id}, Class: {obj_info.class_name}")
                     
                     x1, y1, x2, y2 = [int(c) for c in obj_info.box]
+                    pixel_x = int((x1 + x2) / 2)
+                    pixel_y = int((y1 + y2) / 2)
+
                     cropped_np = frame_rgb[y1:y2, x1:x2]
                     
                     if cropped_np.size == 0:
@@ -112,20 +130,46 @@ def main(args):
                         continue
                         
                     cropped_pil = Image.fromarray(cropped_np)
+
+                    # === Get current data ===
+                    gps = get_gps()
+                    yaw = get_yaw()
+                    depth = get_depth(pixel_x, pixel_y)
+                    if np.isnan(depth.depth) or depth.depth <= 0:
+                        print(f"[Warning] Invalid depth at pixel ({pixel_x},{pixel_y}). Skipping object.")
+                        continue
+
+                    rover_lat, rover_lon = gps.latitude, gps.longitude
+                    rover_yaw = yaw.yaw_deg
+
+                    # === Get sensor metadata ===
+                     # These values must come from your sensors at each frame
+                    # depth = get_depth_for_pixel(pixel_x, pixel_y)  # from LiDAR
+                    # rover_lat, rover_lon = get_current_gps_position()  # from GPS
+                    # rover_yaw = get_current_yaw()  # from IMU or compass
+
+                    # === Convert to GPS ===
+                    lat, lon = pixel_to_gps(pixel_x, pixel_y, depth.depth, rover_lat, rover_lon, rover_yaw)
+                    send_to_qwen= handle_detection(lat, lon, "weird_objects")
+
                     img_path = os.path.join(detected_objects_dir, f"object_{obj_id}_{obj_info.class_name}.jpg")
                     cropped_pil.save(img_path)
                     
-                    print(f"[Qwen-VL] Analyzing object {obj_id}...")
-                    description = analyzer.analyze_object(cropped_pil)
-                    print(f"[Qwen-VL] Analysis complete for object {obj_id}.")
-                    
-                    reporter.add_object_entry(
-                        object_id=obj_id,
-                        class_name=obj_info.class_name,
-                        image_path=img_path,
-                        description=description
-                    )
-                    analyzed_object_ids.add(obj_id)
+                    if not send_to_qwen:
+                        print(f"[Warning] Qwen-VL analysis failed for object {obj_id}. Skipping analysis.")
+                        continue
+                    else: 
+                        print(f"[Qwen-VL] Analyzing object {obj_id}...")
+                        description = analyzer.analyze_object(cropped_pil)
+                        print(f"[Qwen-VL] Analysis complete for object {obj_id}.")
+                        
+                        reporter.add_object_entry(
+                            object_id=obj_id,
+                            class_name=obj_info.class_name,
+                            image_path=img_path,
+                            description=description
+                        )
+                        analyzed_object_ids.add(obj_id)
 
             # 4.3. Display Real-time Results
             display_frame = latest_annotated_frame if latest_annotated_frame is not None else frame

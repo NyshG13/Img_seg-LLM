@@ -21,6 +21,7 @@ if torch.cuda.get_device_properties(0).major >= 8:
     torch.backends.cudnn.allow_tf32 = True
 
 
+
 class GroundingDinoPredictor:
     """
     Wrapper for using a GroundingDINO model for zero-shot object detection.

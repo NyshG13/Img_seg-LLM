@@ -76,7 +76,8 @@ def add_object_to_db(lat, lon, obj_class):
 # This function is called when a new object is detected
 def handle_detection(lat, lon, obj_class):
     if is_duplicate((lat, lon)):
-        print("[✗] Duplicate detected. Skipping...")
+        print("Duplicate detected. Skipping...")
+        return False
     else:
         # send cropped image to Qwen or save JSON etc.
         add_object_to_db(lat, lon, obj_class)
