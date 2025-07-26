@@ -1,0 +1,17 @@
+// generated from rosidl_adapter/resource/srv.idl.em
+// with input from final_pipeline/srv/GetGPS.srv
+// generated code does not contain a copyright notice
+
+
+module final_pipeline {
+  module srv {
+    struct GetGPS_Request {
+      uint8 structure_needs_at_least_one_member;
+    };
+    struct GetGPS_Response {
+      double latitude;
+
+      double longitude;
+    };
+  };
+};

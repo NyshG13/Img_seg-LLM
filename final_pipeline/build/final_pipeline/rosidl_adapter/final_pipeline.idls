@@ -1,0 +1,3 @@
+/home/naysha/ros2_ws/src/final_pipeline/build/final_pipeline/rosidl_adapter/final_pipeline:srv/GetGPS.idl
+/home/naysha/ros2_ws/src/final_pipeline/build/final_pipeline/rosidl_adapter/final_pipeline:srv/GetYaw.idl
+/home/naysha/ros2_ws/src/final_pipeline/build/final_pipeline/rosidl_adapter/final_pipeline:srv/GetDepth.idl

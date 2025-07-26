@@ -1,0 +1,36 @@
+{
+  "type_description_msg": {
+    "type_description": {
+      "type_name": "final_pipeline/srv/GetGPS_Response",
+      "fields": [
+        {
+          "name": "latitude",
+          "type": {
+            "type_id": 11,
+            "capacity": 0,
+            "string_capacity": 0,
+            "nested_type_name": ""
+          },
+          "default_value": ""
+        },
+        {
+          "name": "longitude",
+          "type": {
+            "type_id": 11,
+            "capacity": 0,
+            "string_capacity": 0,
+            "nested_type_name": ""
+          },
+          "default_value": ""
+        }
+      ]
+    },
+    "referenced_type_descriptions": []
+  },
+  "type_hashes": [
+    {
+      "type_name": "final_pipeline/srv/GetGPS_Response",
+      "hash_string": "RIHS01_ca7ca5dec9e8d558f826e4bbc9acddd625fb1c328f23f6be62ef3aba932ef07c"
+    }
+  ]
+}

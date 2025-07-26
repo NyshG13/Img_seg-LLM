@@ -8,11 +8,12 @@ import torch
 import argparse
 import time
 import sys
+from ament_index_python.packages import get_package_share_directory
 
 # Import your project-specific modules
-from grounded_sam2_tracking_camera_with_continuous_id import IncrementalObjectTracker
-from qwen_analyzer import QwenVLAnalyzer
-from report_generator import ReportGenerator
+from extras.grounded_sam2_tracking_camera_with_continuous_id import IncrementalObjectTracker
+from extras.qwen_analyzer import QwenVLAnalyzer
+from extras.report_generator import ReportGenerator
 from gps_tracking import pixel_to_gps
 from gps_tracking import handle_detection
 
@@ -21,7 +22,7 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image as RosImage
 from cv_bridge import CvBridge
-from erc_rover.srv import GetGPS, GetYaw, GetDepth
+from final_pipeline.srv import GetGPS, GetYaw, GetDepth  #this works only after colcon building the package
 
 class PerceptionPipelineNode(Node):
     def __init__(self, args):
@@ -40,12 +41,17 @@ class PerceptionPipelineNode(Node):
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.get_logger().info(f"Using device: {self.device}")
 
+        BASE_PATH = os.path.dirname(__file__)  # Points to final_pipeline/final_pipeline/
+        sam2_ckpt_path = os.path.join(BASE_PATH, 'sam2', 'checkpoints', 'sam2.1_hiera_large.pt')
+        sam2_model_cfg = os.path.join(BASE_PATH, 'sam2', 'configs', 'sam2.1', 'sam2.1_hiera_l.yaml')
+
+
         # --- 2. Initialize Models ---
         self.get_logger().info("Initializing models... This may take a moment.")
         self.tracker = IncrementalObjectTracker(
             grounding_model_id="IDEA-Research/grounding-dino-base",
-            sam2_model_cfg="configs/sam2.1/sam2.1_hiera_l.yaml",
-            sam2_ckpt_path="./checkpoints/sam2.1_hiera_large.pt",
+            sam2_model_cfg=sam2_model_cfg,
+            sam2_ckpt_path=sam2_ckpt_path,
             device=self.device,
             prompt_text=self.args.prompt,
             detection_interval=self.args.detection_interval,

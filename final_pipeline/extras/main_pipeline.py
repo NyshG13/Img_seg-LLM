@@ -9,9 +9,9 @@ import argparse
 import time
 
 # Import your project-specific modules
-from grounded_sam2_tracking_camera_with_continuous_id import IncrementalObjectTracker
-from qwen_analyzer import QwenVLAnalyzer
-from report_generator import ReportGenerator
+from extras.grounded_sam2_tracking_camera_with_continuous_id import IncrementalObjectTracker
+from extras.qwen_analyzer import QwenVLAnalyzer
+from extras.report_generator import ReportGenerator
 from gps_tracking import pixel_to_gps
 from gps_tracking import handle_detection
 

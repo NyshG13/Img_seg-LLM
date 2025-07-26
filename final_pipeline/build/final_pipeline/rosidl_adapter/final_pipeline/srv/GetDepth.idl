@@ -1,0 +1,17 @@
+// generated from rosidl_adapter/resource/srv.idl.em
+// with input from final_pipeline/srv/GetDepth.srv
+// generated code does not contain a copyright notice
+
+
+module final_pipeline {
+  module srv {
+    struct GetDepth_Request {
+      int32 pixel_x;
+
+      int32 pixel_y;
+    };
+    struct GetDepth_Response {
+      float depth;
+    };
+  };
+};
