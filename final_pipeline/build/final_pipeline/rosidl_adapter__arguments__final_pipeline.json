@@ -1,8 +1,0 @@
-{
-  "package_name": "final_pipeline",
-  "non_idl_tuples": [
-    "/home/naysha/ros2_ws/src/final_pipeline:srv/GetGPS.srv",
-    "/home/naysha/ros2_ws/src/final_pipeline:srv/GetYaw.srv",
-    "/home/naysha/ros2_ws/src/final_pipeline:srv/GetDepth.srv"
-  ]
-}

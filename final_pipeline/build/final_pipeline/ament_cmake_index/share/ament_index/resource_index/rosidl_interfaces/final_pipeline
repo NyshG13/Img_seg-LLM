@@ -1,6 +1,0 @@
-srv/GetDepth.idl
-srv/GetDepth.srv
-srv/GetGPS.idl
-srv/GetGPS.srv
-srv/GetYaw.idl
-srv/GetYaw.srv
